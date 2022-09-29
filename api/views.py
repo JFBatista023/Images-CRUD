@@ -124,7 +124,7 @@ class ImageUploadViewSet(views.APIView):
     def post(self, request, *args, **kwargs):
         images = Image.objects.filter(user_id=self.kwargs['pk'])
         for image in images:
-            if image.name == request.data['name']:
+            if image.name.lower() == str(request.data['name']).lower():
                 return Response("Duplicate name", status=status.HTTP_400_BAD_REQUEST)
 
         if str(request.data['photo']).split('.')[1] != 'png' and str(request.data['photo']).split('.')[1] != 'jpg':
@@ -135,5 +135,5 @@ class ImageUploadViewSet(views.APIView):
         serializer = ImageSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
