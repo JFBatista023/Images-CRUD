@@ -1,95 +1,123 @@
 import React, { useState, useEffect } from "react";
-import Nav from "../Nav/Nav";
-import MenuIcon from "@mui/icons-material/Menu";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import SearchIcon from "@mui/icons-material/Search";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   ImageList,
-  Menu,
-  MenuItem,
   IconButton,
   ImageListItem,
   ImageListItemBar,
+  Paper,
+  InputBase,
 } from "@mui/material";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import NavDashboard from "../Nav/NavDashboard";
 
 const DashboardImages = () => {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
   const [images, setImages] = useState([]);
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const srcset = (image, width, height, rows = 1, cols = 1) => {
-    return {
-      src: `${image}?w=${width * cols}&h=${height * rows}&fit=crop&auto=format`,
-      srcSet: `${image}?w=${width * cols}&h=${
-        height * rows
-      }&fit=crop&auto=format&dpr=2 2x`,
-    };
-  };
-
-  // const fetchImage = async () => {
-  //   const res = await fetch(imageUrl);
-  //   const imageBlob = await res.blob();
-  //   const imageObjectURL = URL.createObjectURL(imageBlob);
-  //   setImg(imageObjectURL);
-  // };
+  const [imageName, setImageName] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get("http://127.0.0.1:8000/users/21/images/").then((response) => {
       setImages(response.data);
-      console.log(response.data);
+      console.log(response.data[0].name);
     });
   }, []);
 
+  const searchImage = () => {
+    for (let index = 0; index < images.length; index++) {
+      if (images[index].name === imageName) {
+        return;
+      }
+    }
+  };
+
+  // const deleteImage = () => {
+  //   axios.delete("");
+  // };
+
   return (
     <>
-      <Nav
-        newComponent={
-          <>
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              id="basic-button"
-              aria-controls={open ? "basic-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? "true" : undefined}
-              onClick={handleClick}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Menu
-              id="basic-menu"
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleClose}
-              MenuListProps={{
-                "aria-labelledby": "basic-button",
-              }}
-            >
-              <MenuItem onClick={handleClose}>All Images</MenuItem>
-              <MenuItem onClick={handleClose}>Upload Images</MenuItem>
-              <MenuItem onClick={handleClose}>Logout</MenuItem>
-            </Menu>
-          </>
-        }
+      <NavDashboard />
+
+      <Paper
+        component="form"
+        sx={{
+          p: "2px 4px",
+          display: "flex",
+          alignItems: "center",
+          width: 400,
+          ml: "33%",
+          mt: 4,
+        }}
       >
-        User
-      </Nav>
+        <InputBase
+          value={imageName}
+          onChange={(e) => {
+            setImageName(e.target.value);
+          }}
+          sx={{ ml: 1, flex: 1 }}
+          placeholder="Search Image"
+        />
+        <IconButton
+          onClick={() => {
+            searchImage();
+          }}
+          type="button"
+          sx={{ p: "10px" }}
+          aria-label="search"
+        >
+          <SearchIcon />
+        </IconButton>
+      </Paper>
 
       <div>
-        {images.map((image) => {
-          console.log(image);
-          return <img src={`http://127.0.0.1:8000${image.photo}`}></img>;
-        })}
+        <ImageList sx={{ width: 650, height: 500, ml: "27%", mt: 10 }} cols={2}>
+          {images.map((image) => {
+            const imagePhoto = `http://127.0.0.1:8000${image.photo}`;
+
+            return (
+              <ImageListItem key={imagePhoto}>
+                <img
+                  src={`${imagePhoto}?w=248&fit=crop&auto=format`}
+                  srcSet={`${imagePhoto}?w=248&fit=crop&auto=format&dpr=2 2x`}
+                  alt={image.name}
+                  loading="lazy"
+                />
+                <ImageListItemBar
+                  title={image.name}
+                  actionIcon={
+                    <>
+                      <IconButton
+                        sx={{ color: "rgba(255, 255, 255, 0.54)" }}
+                        onClick={() =>
+                          navigate(`/dashboard/images/${image.id}/`, {
+                            state: { url: imagePhoto },
+                          })
+                        }
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <IconButton
+                        sx={{ color: "rgba(255, 255, 255, 0.54)" }}
+                        aria-label={`info about ${image.name}`}
+                        onClick={() =>
+                          navigate(`/dashboard/images/${image.id}/`, {
+                            state: { url: imagePhoto },
+                          })
+                        }
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </>
+                  }
+                />
+              </ImageListItem>
+            );
+          })}
+        </ImageList>
       </div>
     </>
   );
