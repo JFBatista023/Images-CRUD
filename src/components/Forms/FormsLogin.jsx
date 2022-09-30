@@ -2,17 +2,41 @@ import React from "react";
 import { Button, Container, Paper, TextField, Typography } from "@mui/material";
 import "@fontsource/roboto/400.css";
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
 import Nav from "../Nav/Nav";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const FormsLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  const login = () => {
+    const options = {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      data: {
+        email: email,
+        password: password,
+      },
+      withCredentials: true,
+      url: "http://127.0.0.1:8000/auth/login/",
+    };
+    axios(options)
+      .then((response) => {
+        console.log(response);
+        if (response.status === 202) {
+          localStorage.setItem("user_id", response.data.user_id);
+          localStorage.setItem("username", response.data.username);
+          localStorage.setItem("password", response.data.password);
+          navigate("/dashboard/images/", { replace: true });
+        }
+      })
+      .catch((response) => console.log(response));
+  };
 
   return (
     <>
-      {loggedIn && <Navigate to="/dashboard/images/" replace={true} />}
       <Nav url={"register/"}>Register</Nav>
       <Paper
         sx={{
@@ -32,7 +56,7 @@ const FormsLogin = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              setLoggedIn(true);
+              login();
             }}
           >
             <TextField

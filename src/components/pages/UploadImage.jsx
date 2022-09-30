@@ -6,6 +6,9 @@ import axios from "axios";
 const UploadImage = () => {
   const [name, setName] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const user_id = localStorage.getItem("user_id");
+  const username = localStorage.getItem("username");
+  const password = localStorage.getItem("password");
 
   const sendData = () => {
     const data = {
@@ -16,7 +19,11 @@ const UploadImage = () => {
       method: "POST",
       headers: { "content-type": "multipart/form-data" },
       data: data,
-      url: "21/images/uploadfiles/",
+      auth: {
+        username: username,
+        password: password,
+      },
+      url: `${user_id}/images/uploadfiles/`,
       baseURL: "http://127.0.0.1:8000/users/",
     };
     axios(options)

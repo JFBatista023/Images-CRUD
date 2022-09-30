@@ -10,13 +10,6 @@ const ShowImage = () => {
     <>
       <ImageListItem>
         <img src={url} alt="" loading="lazy" />
-        {/* <ImageListItemBar
-          actionIcon={
-            <IconButton sx={{ color: "rgba(255, 255, 255, 0.54)" }}>
-              <DownloadIcon />
-            </IconButton>
-          }
-        /> */}
       </ImageListItem>
     </>
   );

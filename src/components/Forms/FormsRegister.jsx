@@ -27,7 +27,7 @@ const FormsRegister = () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       data: data,
-      url: "http://127.0.0.1:8000/users/",
+      url: "http://127.0.0.1:8000/auth/register/",
     };
     axios(options)
       .then((response) => {

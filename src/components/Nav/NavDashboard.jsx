@@ -3,11 +3,13 @@ import { Menu, MenuItem, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Nav from "./Nav";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const NavDashboard = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
+  const username = localStorage.getItem("username");
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -23,6 +25,14 @@ const NavDashboard = () => {
 
   const toImagesPage = () => {
     return navigate("/dashboard/images/", { replace: true });
+  };
+
+  const logout = () => {
+    axios.get("http://127.0.0.1:8000/auth/logout/").then((response) => {
+      console.log(response);
+      localStorage.clear();
+      navigate("/", { replace: true });
+    });
   };
 
   return (
@@ -54,12 +64,12 @@ const NavDashboard = () => {
           >
             <MenuItem onClick={toImagesPage}>All Images</MenuItem>
             <MenuItem onClick={toUploadPage}>Upload Images</MenuItem>
-            <MenuItem>Logout</MenuItem>
+            <MenuItem onClick={logout}>Logout</MenuItem>
           </Menu>
         </>
       }
     >
-      User
+      {username}
     </Nav>
   );
 };

@@ -18,25 +18,48 @@ const DashboardImages = () => {
   const [images, setImages] = useState([]);
   const [imageName, setImageName] = useState("");
   const navigate = useNavigate();
+  const user_id = localStorage.getItem("user_id");
+  const username = localStorage.getItem("username");
+  const password = localStorage.getItem("password");
 
-  useEffect(() => {
-    axios.get("http://127.0.0.1:8000/users/21/images/").then((response) => {
-      setImages(response.data);
-      console.log(response.data[0].name);
-    });
-  }, []);
+  const requestGet = () => {
+    const options = {
+      method: "GET",
+      headers: { "content-type": "application/json" },
+      auth: {
+        username: username,
+        password: password,
+      },
+      url: `http://127.0.0.1:8000/users/${user_id}/images/`,
+    };
+    axios(options)
+      .then((response) => {
+        setImages(response.data);
+      })
+      .catch((response) => console.log(response));
+  };
 
-  const searchImage = () => {
+  useEffect(() => requestGet(), [images.length]);
+
+  const deleteImage = (id) => {
+    const options = {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      url: `http://127.0.0.1:8000/users/21/images/${id}/`,
+    };
+    axios(options)
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((response) => console.log(response));
+
     for (let index = 0; index < images.length; index++) {
-      if (images[index].name === imageName) {
-        return;
+      if (images[index].id === id) {
+        setImages(images.splice(index));
+        break;
       }
     }
   };
-
-  // const deleteImage = () => {
-  //   axios.delete("");
-  // };
 
   return (
     <>
@@ -61,14 +84,7 @@ const DashboardImages = () => {
           sx={{ ml: 1, flex: 1 }}
           placeholder="Search Image"
         />
-        <IconButton
-          onClick={() => {
-            searchImage();
-          }}
-          type="button"
-          sx={{ p: "10px" }}
-          aria-label="search"
-        >
+        <IconButton type="button" sx={{ p: "10px" }} aria-label="search">
           <SearchIcon />
         </IconButton>
       </Paper>
@@ -92,11 +108,9 @@ const DashboardImages = () => {
                     <>
                       <IconButton
                         sx={{ color: "rgba(255, 255, 255, 0.54)" }}
-                        onClick={() =>
-                          navigate(`/dashboard/images/${image.id}/`, {
-                            state: { url: imagePhoto },
-                          })
-                        }
+                        onClick={() => {
+                          deleteImage(image.id);
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
