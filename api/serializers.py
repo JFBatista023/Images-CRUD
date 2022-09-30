@@ -20,6 +20,15 @@ class UserUpdatesSerializer(serializers.ModelSerializer):
         return make_password(password)
 
 
+class UserAuthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'password']
+
+    def validate_password(self, password):
+        return make_password(password)
+
+
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image

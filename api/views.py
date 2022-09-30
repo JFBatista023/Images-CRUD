@@ -3,8 +3,10 @@ from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.decorators import permission_classes
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.http import FileResponse
 from api.models import Image
@@ -14,21 +16,14 @@ from api.serializers import ImageSerializer, ImagesUsersListSerializer, UserSeri
 class UsersViewSet(views.APIView):
 
     """Methods for Users/"""
+    # authentication_classes = [BasicAuthentication]
+    # permission_classes = [IsAuthenticated]
 
-    # @permission_classes([IsAdminUser])
     def get(self, request, *args, **kwargs):
         queryset = get_list_or_404(User)
         serializer_class = UserSerializer(queryset, many=True)
         return Response(serializer_class.data, status=status.HTTP_200_OK)
 
-    def post(self, request, *args, **kwargs):
-        serializer = UserUpdatesSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    # @permission_classes([IsAuthenticated, IsAdminUser])
     def put(self, request, pk, *args, **kwargs):
         id = pk
         queryset = get_object_or_404(User, pk=id)
@@ -37,7 +32,6 @@ class UsersViewSet(views.APIView):
             serializer.save()
             return Response(status=status.HTTP_200_OK)
 
-    # @permission_classes([IsAuthenticated, IsAdminUser])
     def patch(self, request, pk, *args, **kwargs):
         id = pk
         queryset = get_object_or_404(User, pk=id)
@@ -47,12 +41,36 @@ class UsersViewSet(views.APIView):
             serializer.save()
             return Response(status=status.HTTP_200_OK)
 
-    # @permission_classes([IsAuthenticated, IsAdminUser])
     def delete(self, request, pk, *args, **kwargs):
         id = pk
         queryset = get_object_or_404(User, pk=id)
         queryset.delete()
         return Response(status=status.HTTP_200_OK)
+
+
+class UserAuthenticationLoginView(views.APIView):
+
+    def post(self, request, *args, **kwargs):
+        user = User.objects.get(email=request.data['email'])
+        user = authenticate(username=user.username,
+                            password=request.data['password'])
+        if user:
+            return Response({"username": user.get_username(), "password": request.data['password'], "user_id": user.pk}, status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
+class UserAuthenticationLogoutView(views.APIView):
+    def get(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_200_OK)
+
+
+class UserAuthenticationRegisterView(views.APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = UserUpdatesSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(generics.ListAPIView):
@@ -78,18 +96,19 @@ class ImagesViewSet(generics.ListAPIView):
 class ImagesUserListViewSet(views.APIView):
     """List of all user images"""
 
-    # permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        queryset = get_list_or_404(Image, user_id=self.kwargs['pk'])
+        queryset = Image.objects.filter(user_id=self.kwargs['pk'])
+        if queryset is None:
+            return Response("No Images Found", status=status.HTTP_200_OK)
         serializer_class = ImagesUsersListSerializer(queryset, many=True)
         return Response(serializer_class.data, status=status.HTTP_200_OK)
 
 
 class ImageUserListViewSet(generics.RetrieveDestroyAPIView):
     """User specific image"""
-
-    # permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request, *args, **kwargs):
         queryset = get_object_or_404(
@@ -108,8 +127,6 @@ class ImageUserListViewSet(generics.RetrieveDestroyAPIView):
 class ShowImageViewSet(views.APIView):
     """Showing a Image"""
 
-    # permission_classes = [IsAuthenticated, IsAdminUser]
-
     def get(self, request, *args, **kwargs):
         image = Image.objects.get(id=self.kwargs['id_image'])
         image_path = image.photo.path
@@ -120,6 +137,9 @@ class ShowImageViewSet(views.APIView):
 class ImageUploadViewSet(views.APIView):
     """Upload Images"""
     parser_classes = [MultiPartParser]
+
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         images = Image.objects.filter(user_id=self.kwargs['pk'])
