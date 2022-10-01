@@ -39,13 +39,17 @@ const DashboardImages = () => {
       .catch((response) => console.log(response));
   };
 
-  useEffect(() => requestGet(), [images.length]);
+  useEffect(() => {
+    if (imageName === "") {
+      requestGet();
+    }
+  }, [images.length]);
 
   const deleteImage = (id) => {
     const options = {
       method: "DELETE",
       headers: { "content-type": "application/json" },
-      url: `http://127.0.0.1:8000/users/21/images/${id}/`,
+      url: `http://127.0.0.1:8000/users/${user_id}/images/${id}/`,
     };
     axios(options)
       .then((response) => {
@@ -56,6 +60,21 @@ const DashboardImages = () => {
     for (let index = 0; index < images.length; index++) {
       if (images[index].id === id) {
         setImages(images.splice(index));
+        break;
+      }
+    }
+  };
+
+  const searchImage = () => {
+    if (imageName === "") {
+      setImages([]);
+      return;
+    }
+
+    for (let i = 0; i < images.length; i++) {
+      if (images[i].name === imageName) {
+        const tempImage = [images[i]];
+        setImages(tempImage);
         break;
       }
     }
@@ -84,7 +103,12 @@ const DashboardImages = () => {
           sx={{ ml: 1, flex: 1 }}
           placeholder="Search Image"
         />
-        <IconButton type="button" sx={{ p: "10px" }} aria-label="search">
+        <IconButton
+          onClick={() => searchImage()}
+          type="button"
+          sx={{ p: "10px" }}
+          aria-label="search"
+        >
           <SearchIcon />
         </IconButton>
       </Paper>
