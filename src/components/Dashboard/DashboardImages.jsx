@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -10,52 +10,33 @@ import {
   Paper,
   InputBase,
 } from "@mui/material";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import NavDashboard from "../Nav/NavDashboard";
+import AuthContext from "../../context/AuthContext";
+import useAxios from "../../utils/useAxios";
 
 const DashboardImages = () => {
   const [images, setImages] = useState([]);
   const [imageName, setImageName] = useState("");
+  // const [getImageController, setGetImageController] = useState(false);
   const navigate = useNavigate();
-  const user_id = localStorage.getItem("user_id");
-  const username = localStorage.getItem("username");
-  const password = localStorage.getItem("password");
 
-  const requestGet = () => {
-    const options = {
-      method: "GET",
-      headers: { "content-type": "application/json" },
-      auth: {
-        username: username,
-        password: password,
-      },
-      url: `http://127.0.0.1:8000/users/${user_id}/images/`,
-    };
-    axios(options)
-      .then((response) => {
-        setImages(response.data);
-      })
-      .catch((response) => console.log(response));
+  let { user } = useContext(AuthContext);
+  const user_id = user.user_id;
+
+  const api = useAxios();
+
+  const getImages = async () => {
+    const response = await api.get(`users/${user_id}/images/`);
+
+    if (response.status === 200) {
+      setImages(response.data);
+    }
   };
 
-  useEffect(() => {
-    if (imageName === "") {
-      requestGet();
-    }
-  }, [images.length]);
-
-  const deleteImage = (id) => {
-    const options = {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      url: `http://127.0.0.1:8000/users/${user_id}/images/${id}/`,
-    };
-    axios(options)
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((response) => console.log(response));
+  const deleteImage = async (id) => {
+    const response = await api.delete(`users/${user_id}/images/${id}/`);
+    console.log(response);
 
     for (let index = 0; index < images.length; index++) {
       if (images[index].id === id) {
@@ -79,6 +60,10 @@ const DashboardImages = () => {
       }
     }
   };
+
+  useEffect(() => {
+    getImages();
+  }, [images.length]);
 
   return (
     <>

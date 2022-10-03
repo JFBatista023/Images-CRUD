@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Menu, MenuItem, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Nav from "./Nav";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import AuthContext from "../../context/AuthContext";
 
 const NavDashboard = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
-  const username = localStorage.getItem("username");
+
+  let { logoutUser, user } = useContext(AuthContext);
+  const username = user.username;
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -25,14 +27,6 @@ const NavDashboard = () => {
 
   const toImagesPage = () => {
     return navigate("/dashboard/images/", { replace: true });
-  };
-
-  const logout = () => {
-    axios.get("http://127.0.0.1:8000/auth/logout/").then((response) => {
-      console.log(response);
-      localStorage.clear();
-      navigate("/", { replace: true });
-    });
   };
 
   return (
@@ -64,7 +58,7 @@ const NavDashboard = () => {
           >
             <MenuItem onClick={toImagesPage}>All Images</MenuItem>
             <MenuItem onClick={toUploadPage}>Upload Images</MenuItem>
-            <MenuItem onClick={logout}>Logout</MenuItem>
+            <MenuItem onClick={logoutUser}>Logout</MenuItem>
           </Menu>
         </>
       }

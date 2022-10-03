@@ -1,36 +1,27 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import NavDashboard from "../Nav/NavDashboard";
 import { Button, Container, Paper, TextField, Typography } from "@mui/material";
-import axios from "axios";
+import AuthContext from "../../context/AuthContext";
+import useAxios from "../../utils/useAxios";
 
 const UploadImage = () => {
   const [name, setName] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-  const user_id = localStorage.getItem("user_id");
-  const username = localStorage.getItem("username");
-  const password = localStorage.getItem("password");
+
+  const api = useAxios();
+  let { user } = useContext(AuthContext);
+  const user_id = user.user_id;
 
   const sendData = () => {
-    const data = {
-      name: name,
-      photo: selectedImage,
-    };
-    const options = {
-      method: "POST",
-      headers: { "content-type": "multipart/form-data" },
-      data: data,
-      auth: {
-        username: username,
-        password: password,
+    let response = api.post(
+      `http://127.0.0.1:8000/users/${user_id}/images/uploadfiles/`,
+      {
+        name: name,
+        photo: selectedImage,
       },
-      url: `${user_id}/images/uploadfiles/`,
-      baseURL: "http://127.0.0.1:8000/users/",
-    };
-    axios(options)
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((response) => console.log(response));
+      { headers: { "content-type": "multipart/form-data" } }
+    );
+    console.log(response);
   };
 
   return (

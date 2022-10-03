@@ -27,7 +27,8 @@ const FormsRegister = () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       data: data,
-      url: "http://127.0.0.1:8000/auth/register/",
+      url: "auth/register/",
+      baseURL: "http://127.0.0.1:8000/",
     };
     axios(options)
       .then((response) => {
@@ -41,8 +42,8 @@ const FormsRegister = () => {
 
   return (
     <>
-      {regSucess && <Navigate to="/" replace={true} />}
-      <Nav url={"/"}>Login</Nav>
+      {regSucess && <Navigate to="/login" replace={true} />}
+      <Nav url={"/login"}>Login</Nav>
       <Paper
         sx={{
           mt: 12,
