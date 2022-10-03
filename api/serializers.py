@@ -1,7 +1,16 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from api.models import Image
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['username'] = user.username
+        return token
 
 
 class UserSerializer(serializers.ModelSerializer):

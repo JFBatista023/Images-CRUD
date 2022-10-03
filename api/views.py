@@ -3,21 +3,33 @@ from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import api_view
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.http import FileResponse
 from api.models import Image
-from api.serializers import ImageSerializer, ImagesUsersListSerializer, UserSerializer, UserUpdatesSerializer
+from api.serializers import ImageSerializer, ImagesUsersListSerializer, UserSerializer, UserUpdatesSerializer, MyTokenObtainPairSerializer
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+
+@api_view(['GET'])
+def getRoutes(request):
+    routes = [
+        '/api/token',
+        '/api/token/refresh',
+    ]
+
+    return Response(routes)
 
 
 class UsersViewSet(views.APIView):
 
     """Methods for Users/"""
-    # authentication_classes = [BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         queryset = get_list_or_404(User)
@@ -59,13 +71,13 @@ class UserAuthenticationLoginView(views.APIView):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
-class UserAuthenticationLogoutView(views.APIView):
-    def get(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_200_OK)
-
-
 class UserAuthenticationRegisterView(views.APIView):
     def post(self, request, *args, **kwargs):
+        user_email = User.objects.filter(email=request.data['email'])
+        user_username = User.objects.filter(username=request.data['username'])
+        if user_email or user_username:
+            return Response("Credentials already registered", status=status.HTTP_406_NOT_ACCEPTABLE)
+
         serializer = UserUpdatesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -76,7 +88,6 @@ class UserAuthenticationRegisterView(views.APIView):
 class UserViewSet(generics.ListAPIView):
     """A User"""
 
-    # @permission_classes([IsAuthenticated, IsAdminUser])
     def get(self, request, pk, *args, **kwargs):
         id = pk
         if id is not None:
@@ -96,7 +107,6 @@ class ImagesViewSet(generics.ListAPIView):
 class ImagesUserListViewSet(views.APIView):
     """List of all user images"""
 
-    authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -109,6 +119,8 @@ class ImagesUserListViewSet(views.APIView):
 
 class ImageUserListViewSet(generics.RetrieveDestroyAPIView):
     """User specific image"""
+
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         queryset = get_object_or_404(
@@ -127,6 +139,8 @@ class ImageUserListViewSet(generics.RetrieveDestroyAPIView):
 class ShowImageViewSet(views.APIView):
     """Showing a Image"""
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         image = Image.objects.get(id=self.kwargs['id_image'])
         image_path = image.photo.path
@@ -137,8 +151,6 @@ class ShowImageViewSet(views.APIView):
 class ImageUploadViewSet(views.APIView):
     """Upload Images"""
     parser_classes = [MultiPartParser]
-
-    authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
