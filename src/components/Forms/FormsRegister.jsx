@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, Container, Paper, TextField, Typography } from "@mui/material";
 import "@fontsource/roboto/400.css";
-import { useState } from "react";
 import axios from "axios";
 
 import Nav from "../Nav/Nav";
 import { Navigate } from "react-router-dom";
+import AuthContext from "../../context/AuthContext";
 
 const FormsRegister = () => {
   const [username, setUserName] = useState("");
@@ -14,6 +14,14 @@ const FormsRegister = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [regSucess, setRegSucess] = useState(false);
+
+  let { user, logoutUser } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (user) {
+      logoutUser();
+    }
+  }, []);
 
   const sendData = () => {
     const data = {

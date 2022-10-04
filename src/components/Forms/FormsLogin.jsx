@@ -1,14 +1,20 @@
 import React from "react";
 import { Button, Container, Paper, TextField, Typography } from "@mui/material";
 import "@fontsource/roboto/400.css";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import Nav from "../Nav/Nav";
 import AuthContext from "../../context/AuthContext";
 
 const FormsLogin = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  let { loginUser } = useContext(AuthContext);
+  let { loginUser, logoutUser, user } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (user) {
+      logoutUser();
+    }
+  }, []);
 
   return (
     <>
@@ -28,14 +34,14 @@ const FormsLogin = () => {
           <Typography variant="h4" component="h1" align="center">
             Login
           </Typography>
-          <form onSubmit={loginUser}>
+          <form onSubmit={(e) => loginUser(e, email, password)}>
             <TextField
-              label="Username"
+              label="Email"
               margin="dense"
-              name="username"
-              value={username}
+              name="email"
+              value={email}
               onChange={(e) => {
-                setUsername(e.target.value);
+                setEmail(e.target.value);
               }}
               required
               fullWidth

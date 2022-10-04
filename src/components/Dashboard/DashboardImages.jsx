@@ -9,22 +9,32 @@ import {
   ImageListItemBar,
   Paper,
   InputBase,
+  Modal,
+  Backdrop,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import NavDashboard from "../Nav/NavDashboard";
 import AuthContext from "../../context/AuthContext";
 import useAxios from "../../utils/useAxios";
 
 const DashboardImages = () => {
+  const [imagePath, setImagePath] = useState("");
   const [images, setImages] = useState([]);
   const [imageName, setImageName] = useState("");
-  // const [getImageController, setGetImageController] = useState(false);
-  const navigate = useNavigate();
+  const [hasDeleted, setHasDeleted] = useState(false);
+
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   let { user } = useContext(AuthContext);
   const user_id = user.user_id;
 
   const api = useAxios();
+
+  const handleImage = (value) => {
+    setImagePath(value);
+    handleOpen(true);
+  };
 
   const getImages = async () => {
     const response = await api.get(`users/${user_id}/images/`);
@@ -41,6 +51,7 @@ const DashboardImages = () => {
     for (let index = 0; index < images.length; index++) {
       if (images[index].id === id) {
         setImages(images.splice(index));
+        setHasDeleted(true);
         break;
       }
     }
@@ -62,8 +73,13 @@ const DashboardImages = () => {
   };
 
   useEffect(() => {
-    getImages();
-  }, [images.length]);
+    if (imageName === "" || hasDeleted) {
+      getImages();
+    }
+    if (hasDeleted) {
+      setHasDeleted(false);
+    }
+  }, [hasDeleted, images.length]);
 
   return (
     <>
@@ -76,7 +92,7 @@ const DashboardImages = () => {
           display: "flex",
           alignItems: "center",
           width: 400,
-          ml: "33%",
+          ml: "34%",
           mt: 4,
         }}
       >
@@ -99,7 +115,7 @@ const DashboardImages = () => {
       </Paper>
 
       <div>
-        <ImageList sx={{ width: 650, height: 500, ml: "27%", mt: 10 }} cols={2}>
+        <ImageList sx={{ width: 700, height: 520, ml: "27%", mt: 10 }} cols={2}>
           {images.map((image) => {
             const imagePhoto = `http://127.0.0.1:8000${image.photo}`;
 
@@ -126,14 +142,32 @@ const DashboardImages = () => {
                       <IconButton
                         sx={{ color: "rgba(255, 255, 255, 0.54)" }}
                         aria-label={`info about ${image.name}`}
-                        onClick={() =>
-                          navigate(`/dashboard/images/${image.id}/`, {
-                            state: { url: imagePhoto },
-                          })
-                        }
+                        onClick={() => handleImage(imagePhoto)}
                       >
                         <VisibilityIcon />
                       </IconButton>
+                      <Modal
+                        open={open}
+                        onClose={handleClose}
+                        closeAfterTransition
+                        BackdropComponent={Backdrop}
+                        BackdropProps={{
+                          timeout: 400,
+                        }}
+                      >
+                        <ImageListItem
+                          sx={{ mt: "10%", ml: "23%", width: "90%" }}
+                        >
+                          <img
+                            src={imagePath}
+                            alt={image.name}
+                            style={{
+                              maxHeight: "50%",
+                              maxWidth: "50%",
+                            }}
+                          />
+                        </ImageListItem>
+                      </Modal>
                     </>
                   }
                 />

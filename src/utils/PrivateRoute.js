@@ -7,4 +7,5 @@ const PrivateRoute = ({ children, ...rest }) => {
   return user ? <Outlet /> : <Navigate to="/login" />;
 };
 
+
 export default PrivateRoute;

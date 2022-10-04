@@ -3,7 +3,6 @@ import { Route, Routes } from "react-router-dom";
 import FormsLogin from "./components/Forms/FormsLogin";
 import FormsRegister from "./components/Forms/FormsRegister";
 import DashboardImages from "./components/Dashboard/DashboardImages";
-import ShowImage from "./components/pages/ShowImage";
 import UploadImage from "./components/pages/UploadImage";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./utils/PrivateRoute";
@@ -24,7 +23,6 @@ function App() {
               path="dashboard/images/"
               element={<DashboardImages />}
             />
-            <Route exact path="dashboard/images/:id/" element={<ShowImage />} />
           </Route>
           <Route exact path="/register" element={<FormsRegister />} />
           <Route exact path="/login" element={<FormsLogin />} />
