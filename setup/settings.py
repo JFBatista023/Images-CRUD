@@ -118,6 +118,8 @@ REST_FRAMEWORK = {
     ),
 }
 
+AUTHENTICATION_BACKENDS = ['api.auth_backend.EmailBackend']
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
@@ -154,7 +156,6 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-SESSION_COOKIE_SAMESITE = "Lax"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

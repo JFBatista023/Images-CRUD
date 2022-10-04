@@ -2,29 +2,17 @@ import os
 from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.http import FileResponse
 from api.models import Image
-from api.serializers import ImageSerializer, ImagesUsersListSerializer, UserSerializer, UserUpdatesSerializer, MyTokenObtainPairSerializer
+from api.serializers import ImageSerializer, ImagesUsersListSerializer, UserSerializer, UserUpdatesSerializer, EmailTokenObtainSerializer
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
-
-
-@api_view(['GET'])
-def getRoutes(request):
-    routes = [
-        '/api/token',
-        '/api/token/refresh',
-    ]
-
-    return Response(routes)
+    serializer_class = EmailTokenObtainSerializer
 
 
 class UsersViewSet(views.APIView):
@@ -60,17 +48,6 @@ class UsersViewSet(views.APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class UserAuthenticationLoginView(views.APIView):
-
-    def post(self, request, *args, **kwargs):
-        user = User.objects.get(email=request.data['email'])
-        user = authenticate(username=user.username,
-                            password=request.data['password'])
-        if user:
-            return Response({"username": user.get_username(), "password": request.data['password'], "user_id": user.pk}, status=status.HTTP_202_ACCEPTED)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-
 class UserAuthenticationRegisterView(views.APIView):
     def post(self, request, *args, **kwargs):
         user_email = User.objects.filter(email=request.data['email'])
@@ -81,8 +58,8 @@ class UserAuthenticationRegisterView(views.APIView):
         serializer = UserUpdatesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response("User created successfully", status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(generics.ListAPIView):
@@ -90,7 +67,7 @@ class UserViewSet(generics.ListAPIView):
 
     def get(self, request, pk, *args, **kwargs):
         id = pk
-        if id is not None:
+        if id:
             queryset = get_object_or_404(User, pk=id)
             serializer_class = UserSerializer(queryset)
             return Response(serializer_class.data, status=status.HTTP_200_OK)
@@ -101,7 +78,6 @@ class ImagesViewSet(generics.ListAPIView):
 
     queryset = get_list_or_404(Image)
     serializer_class = ImageSerializer
-    # permission_classes = [IsAdminUser]
 
 
 class ImagesUserListViewSet(views.APIView):
@@ -111,8 +87,8 @@ class ImagesUserListViewSet(views.APIView):
 
     def get(self, request, *args, **kwargs):
         queryset = Image.objects.filter(user_id=self.kwargs['pk'])
-        if queryset is None:
-            return Response("No Images Found", status=status.HTTP_200_OK)
+        if not queryset:
+            return Response([], status=status.HTTP_200_OK)
         serializer_class = ImagesUsersListSerializer(queryset, many=True)
         return Response(serializer_class.data, status=status.HTTP_200_OK)
 
